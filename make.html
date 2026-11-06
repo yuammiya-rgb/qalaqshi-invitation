@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Invitation Link Maker · Qalaqshi</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0b0906">
+<meta property="og:title" content="Invitation Link Maker · Qalaqshi">
+<meta property="og:description" content="Internal tool for creating personal invitation links.">
+<meta property="og:image" content="https://qalaqshi-invitation.vercel.app/og-image.jpg">
+
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Marcellus&family=Noto+Serif+Georgian:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+<style>
+  html[lang="ru"] .greeting { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(26px, 5vw, 32px); }
+</style>
+</head>
+<body>
+
+<div class="bg-pattern" aria-hidden="true"></div>
+<div class="bg-vignette" aria-hidden="true"></div>
+
+<main class="page">
+  <section class="card maker">
+    <img class="card__logo" src="logo.png" alt="Qalaqshi">
+    <p class="eyebrow">Генератор приглашений</p>
+    <h1 class="greeting">Ссылка для гостя</h1>
+
+    <form id="makerForm" autocomplete="off" novalidate>
+      <div class="field">
+        <label for="name">Имя гостя</label>
+        <input id="name" type="text" maxlength="80" placeholder="ნინო">
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="date">Дата</label>
+          <input id="date" type="date">
+        </div>
+        <div class="field">
+          <label for="time">Время</label>
+          <input id="time" type="time" step="300">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="lang">Язык приглашения</label>
+        <select id="lang">
+          <option value="ka" selected>Грузинский (GE)</option>
+          <option value="en">Английский (EN)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Готовая ссылка</label>
+        <div class="output" id="output">Впишите имя, дату и время</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn--primary" type="button" id="copyBtn">Скопировать ссылку</button>
+        <a class="btn" id="openBtn" href="/" target="_blank" rel="noopener">Открыть приглашение</a>
+        <a class="btn" id="waBtn" href="https://wa.me/" target="_blank" rel="noopener">Отправить в WhatsApp</a>
+      </div>
+
+      <p class="hint" id="hint">Гость видит только приглашение, эта страница ему не показывается.</p>
+    </form>
+  </section>
+</main>
+
+<script src="i18n.js"></script>
+<script>
+(function () {
+  'use strict';
+  var QI = window.QI;
+  var $ = function (id) { return document.getElementById(id); };
+  var hintDefault = $('hint').textContent;
+  var hintTimer;
+
+  function buildLink() {
+    var p = new URLSearchParams();
+    var name = QI.clean($('name').value, 80);
+    if (name) p.set('n', name);
+    if ($('date').value) p.set('d', $('date').value);
+    if ($('time').value) p.set('t', QI.formatTime($('time').value));
+    if ($('lang').value === 'en') p.set('l', 'en');
+    var qs = p.toString().replace(/%3A/gi, ':');
+    return window.location.origin + '/' + (qs ? '?' + qs : '');
+  }
+
+  function missing() {
+    var list = [];
+    if (!QI.clean($('name').value)) list.push('имя');
+    if (!$('date').value) list.push('дату');
+    if (!$('time').value) list.push('время');
+    return list;
+  }
+
+  function update() {
+    var link = buildLink();
+    var miss = missing();
+    $('output').textContent = link;
+    $('openBtn').href = link;
+    $('waBtn').href = 'https://wa.me/?text=' + encodeURIComponent(link);
+    setHint(miss.length ? 'Ещё не заполнено: ' + miss.join(', ') + '.' : hintDefault, false);
+  }
+
+  function setHint(text, temporary) {
+    clearTimeout(hintTimer);
+    $('hint').textContent = text;
+    if (temporary) hintTimer = setTimeout(update, 2500);
+  }
+
+  function fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  $('copyBtn').addEventListener('click', function () {
+    var link = buildLink();
+    var done = function () { setHint('Ссылка скопирована ✓', true); };
+    var fail = function () {
+      if (fallbackCopy(link)) done();
+      else setHint('Не удалось скопировать — выделите ссылку вручную.', true);
+    };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(link).then(done, fail);
+    } else {
+      fail();
+    }
+  });
+
+  ['name', 'date', 'time', 'lang'].forEach(function (id) {
+    $(id).addEventListener('input', update);
+    $(id).addEventListener('change', update);
+  });
+
+  $('makerForm').addEventListener('submit', function (e) { e.preventDefault(); });
+
+  update();
+})();
+</script>
+</body>
+</html>
