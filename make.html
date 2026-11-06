@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
@@ -19,9 +19,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Marcellus&family=Noto+Serif+Georgian:wght@400;500&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="style.css">
-<style>
-  html[lang="ru"] .greeting { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(26px, 5vw, 32px); }
-</style>
 </head>
 <body>
 
@@ -31,46 +28,46 @@
 <main class="page">
   <section class="card maker">
     <img class="card__logo" src="logo.png" alt="Qalaqshi">
-    <p class="eyebrow">Генератор приглашений</p>
-    <h1 class="greeting">Ссылка для гостя</h1>
+    <p class="eyebrow">Invitation Maker</p>
+    <h1 class="greeting">Guest Link</h1>
 
     <form id="makerForm" autocomplete="off" novalidate>
       <div class="field">
-        <label for="name">Имя гостя</label>
+        <label for="name">Guest name</label>
         <input id="name" type="text" maxlength="80" placeholder="ნინო">
       </div>
 
       <div class="row">
         <div class="field">
-          <label for="date">Дата</label>
+          <label for="date">Date</label>
           <input id="date" type="date">
         </div>
         <div class="field">
-          <label for="time">Время</label>
+          <label for="time">Time</label>
           <input id="time" type="time" step="300">
         </div>
       </div>
 
       <div class="field">
-        <label for="lang">Язык приглашения</label>
+        <label for="lang">Invitation language</label>
         <select id="lang">
-          <option value="ka" selected>Грузинский (GE)</option>
-          <option value="en">Английский (EN)</option>
+          <option value="ka" selected>Georgian (GE)</option>
+          <option value="en">English (EN)</option>
         </select>
       </div>
 
       <div class="field">
-        <label>Готовая ссылка</label>
-        <div class="output" id="output">Впишите имя, дату и время</div>
+        <label>Your link</label>
+        <div class="output" id="output">Enter the name, date and time</div>
       </div>
 
       <div class="actions">
-        <button class="btn btn--primary" type="button" id="copyBtn">Скопировать ссылку</button>
-        <a class="btn" id="openBtn" href="/" target="_blank" rel="noopener">Открыть приглашение</a>
-        <a class="btn" id="waBtn" href="https://wa.me/" target="_blank" rel="noopener">Отправить в WhatsApp</a>
+        <button class="btn btn--primary" type="button" id="copyBtn">Copy link</button>
+        <a class="btn" id="openBtn" href="/" target="_blank" rel="noopener">Preview invitation</a>
+        <a class="btn" id="waBtn" href="https://wa.me/" target="_blank" rel="noopener">Send via WhatsApp</a>
       </div>
 
-      <p class="hint" id="hint">Гость видит только приглашение, эта страница ему не показывается.</p>
+      <p class="hint" id="hint">Guests only see the invitation — this page is just for you.</p>
     </form>
   </section>
 </main>
@@ -97,9 +94,9 @@
 
   function missing() {
     var list = [];
-    if (!QI.clean($('name').value)) list.push('имя');
-    if (!$('date').value) list.push('дату');
-    if (!$('time').value) list.push('время');
+    if (!QI.clean($('name').value)) list.push('name');
+    if (!$('date').value) list.push('date');
+    if (!$('time').value) list.push('time');
     return list;
   }
 
@@ -109,7 +106,7 @@
     $('output').textContent = link;
     $('openBtn').href = link;
     $('waBtn').href = 'https://wa.me/?text=' + encodeURIComponent(link);
-    setHint(miss.length ? 'Ещё не заполнено: ' + miss.join(', ') + '.' : hintDefault, false);
+    setHint(miss.length ? 'Still missing: ' + miss.join(', ') + '.' : hintDefault, false);
   }
 
   function setHint(text, temporary) {
@@ -134,10 +131,10 @@
 
   $('copyBtn').addEventListener('click', function () {
     var link = buildLink();
-    var done = function () { setHint('Ссылка скопирована ✓', true); };
+    var done = function () { setHint('Link copied ✓', true); };
     var fail = function () {
       if (fallbackCopy(link)) done();
-      else setHint('Не удалось скопировать — выделите ссылку вручную.', true);
+      else setHint('Couldn’t copy — please select the link and copy it manually.', true);
     };
     if (navigator.clipboard && window.isSecureContext) {
       navigator.clipboard.writeText(link).then(done, fail);
